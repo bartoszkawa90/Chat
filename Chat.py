@@ -71,30 +71,30 @@ def retry_on_exception(max_retries=3, delay=1, backoff=2, exceptions=(Exception,
 class PageOperations:
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
-        self.wait_until_visible(locator)
+        self.wait_until_visible(locator, 30)
         element = self.driver.find_element(locator.type, locator.value)
         element.click()
         self.logger.info(f"{locator.title} clicked")
 
     def click_enter(self, locator: Locator):
-        self.wait_until_visible(locator)
+        self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         element.send_keys(Keys.ENTER)
 
     # @retry_on_exception(max_retries=2, delay=2, exceptions=(TimeoutException,))
     def send_text(self, locator: Locator, text_input: str) -> None:
-        self.wait_until_visible(locator)
+        self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         element.send_keys(text_input)
         self.logger.info(f"text passed to {locator.title}")
 
     def get_text(self, locator: Locator) -> str:
-        self.wait_until_visible(locator)
+        self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         return element.text
 
-    def wait_until_visible(self, locator: Locator):
-        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((locator.type, locator.value)))
+    def wait_until_visible(self, locator: Locator, timeout: int):
+        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((locator.type, locator.value)))
         time.sleep(2)
 
 
@@ -124,6 +124,9 @@ class ChatGPT(PageOperations):
 
     def __init__(self):
         ssl._create_default_https_context = ssl._create_stdlib_context
+        # options = webdriver.ChromeOptions()
+        # options.add_argument("--headless")
+        # self.driver = uc.Chrome(options=options)
         self.driver = uc.Chrome()
 
     def open_chat_page(self):
@@ -146,10 +149,19 @@ class ChatGPT(PageOperations):
 
         self.send_text(locator=Locators.password_input, text_input=self.password)
 
+        # try to finish logging to chat
+        time.sleep(30)
         try:
-            self.click(Locators.submit_login)
+            try:
+                self.click(Locators.submit_login)
+            except:
+                self.click(Locators.submit_continue)
         except:
-            self.click(Locators.submit_continue)
+            self.driver.refresh()
+            try:
+                self.click(Locators.submit_login)
+            except:
+                self.click(Locators.submit_continue)
 
         self.logger.info("Logged in")
         # create new chat and capture name
