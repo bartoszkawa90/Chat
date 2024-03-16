@@ -26,8 +26,8 @@ class Locator:
 @dataclasses.dataclass
 class Locators:
     # bing
-    # close_pop_up_button = Locator(By.ID, 'close pop up', 'bnp_btn_reject')
-    # text_input = Locator(By.ID, 'text input', 'searchbox')
+    close_pop_up_button = Locator(By.ID, 'close pop up', 'bnp_btn_reject')
+    text_input = Locator(By.ID, 'text input', 'searchbox')
 
     # chatgpt
     login_button = Locator(By.XPATH, 'login', '//*[@id="__next"]/div[1]/div[2]/div[1]/div/div/button[1]')
@@ -68,19 +68,67 @@ def retry_on_exception(max_retries=3, delay=1, backoff=2, exceptions=(Exception,
     return decorator
 
 
-class Chat:
+class PageOperations:
+    #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
+    def click(self, locator: Locator):
+        self.wait_until_visible(locator)
+        element = self.driver.find_element(locator.type, locator.value)
+        element.click()
+        self.logger.info(f"{locator.title} clicked")
+
+    def click_enter(self, locator: Locator):
+        self.wait_until_visible(locator)
+        element = self.driver.find_element(locator.type, locator.value)
+        element.send_keys(Keys.ENTER)
+
+    # @retry_on_exception(max_retries=2, delay=2, exceptions=(TimeoutException,))
+    def send_text(self, locator: Locator, text_input: str) -> None:
+        self.wait_until_visible(locator)
+        element = self.driver.find_element(locator.type, locator.value)
+        element.send_keys(text_input)
+        self.logger.info(f"text passed to {locator.title}")
+
+    def get_text(self, locator: Locator) -> str:
+        self.wait_until_visible(locator)
+        element = self.driver.find_element(locator.type, locator.value)
+        return element.text
+
+    def wait_until_visible(self, locator: Locator):
+        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((locator.type, locator.value)))
+        time.sleep(2)
+
+
+class ChatBING(PageOperations):
+    url = 'https://www.bing.com/chat?q=Bing+AI&FORM=hpcodx'
+    logger = Logger()
+
+    def __init__(self):
+        ssl._create_default_https_context = ssl._create_stdlib_context
+        self.driver = uc.Chrome()
+
+    def open_chat_page(self):
+        self.driver.get(self.url)
+        self.click(Locators.close_pop_up_button)
+        self.logger.info("Page opened")
+
+    def ask_chat(self, locator: Locator = Locators.text_input, text: str = ''):
+        self.send_text(locator, text)
+        self.click_enter(locator)
+
+
+class ChatGPT(PageOperations):
     url = 'https://chat.openai.com/chat'
     email = 'bartekkawa2021@gmail.com'
     password = 'MADAfaka2001!'
     logger = Logger()
 
     def __init__(self):
-        # self.driver = webdriver.Chrome()
         ssl._create_default_https_context = ssl._create_stdlib_context
         self.driver = uc.Chrome()
 
     def open_chat_page(self):
         self.driver.get(self.url)
+
         self.logger.info("Page opened")
 
     def login_chat(self, tries: int = 3):
@@ -124,36 +172,6 @@ class Chat:
 
         return answers
 
-
-
-# COMMON
-#     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
-    def click(self, locator: Locator):
-        self.wait_until_visible(locator)
-        element = self.driver.find_element(locator.type, locator.value)
-        element.click()
-        self.logger.info(f"{locator.title} clicked")
-
-    def click_enter(self, locator: Locator):
-        self.wait_until_visible(locator)
-        element = self.driver.find_element(locator.type, locator.value)
-        element.send_keys(Keys.ENTER)
-
-    # @retry_on_exception(max_retries=2, delay=2, exceptions=(TimeoutException,))
-    def send_text(self, locator: Locator, text_input: str) -> None:
-        self.wait_until_visible(locator)
-        element = self.driver.find_element(locator.type, locator.value)
-        element.send_keys(text_input)
-        self.logger.info(f"text passed to {locator.title}")
-
-    def get_text(self, locator: Locator) -> str:
-        self.wait_until_visible(locator)
-        element = self.driver.find_element(locator.type, locator.value)
-        return element.text
-
-    def wait_until_visible(self, locator: Locator):
-        WebDriverWait(self.driver, 20).until(EC.visibility_of_element_located((locator.type, locator.value)))
-        time.sleep(2)
 
 
 
