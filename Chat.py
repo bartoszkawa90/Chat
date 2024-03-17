@@ -14,6 +14,7 @@ from selenium.webdriver.common.keys import Keys
 import ssl
 from functools import wraps
 from selenium.webdriver.support.wait import TimeoutException
+from random import randint
 
 
 class Locator:
@@ -49,7 +50,7 @@ class Locators:
     # // *[ @ id = "__next"] / div[1] / div[2] / main / div[2] / div[1] / div / div / div / div[3]       // first answer
     # // *[ @ id = "__next"] / div[1] / div[2] / main / div[2] / div[1] / div / div / div / div[5]       // second answer
 
-
+# Decorators
 def retry_on_exception(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
     def decorator(func):
         @wraps(func)
@@ -68,7 +69,23 @@ def retry_on_exception(max_retries=3, delay=1, backoff=2, exceptions=(Exception,
     return decorator
 
 
+def wait_random_delay():
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            time.sleep(randint(randint(randint(1, 4), randint(4, 9)), randint(randint(10, 19),
+                                                                              randint(19, 40))))  # triple randint
+            return func(*args, **kwargs)  # Last attempt without catching exceptions
+        return wrapper
+    return decorator
+
+
 class PageOperations:
+    def __init__(self):
+        self.logger = Logger()
+        ssl._create_default_https_context = ssl._create_stdlib_context
+        self.driver = uc.Chrome()
+
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
         self.wait_until_visible(locator, 30)
@@ -76,12 +93,13 @@ class PageOperations:
         element.click()
         self.logger.info(f"{locator.title} clicked")
 
+    @wait_random_delay()
     def click_enter(self, locator: Locator):
         self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         element.send_keys(Keys.ENTER)
 
-    # @retry_on_exception(max_retries=2, delay=2, exceptions=(TimeoutException,))
+    @wait_random_delay()
     def send_text(self, locator: Locator, text_input: str) -> None:
         self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
@@ -97,14 +115,27 @@ class PageOperations:
         WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((locator.type, locator.value)))
         time.sleep(2)
 
+    def random_refresh(self):
+        choice = randint(0, 1)
+        if choice == 1:
+            self.logger.info("Random refresh")
+            self.driver.refresh()
+        else:
+            time.sleep(randint(randint(1, 4), randint(5, 8)))
+
+    def random_back_and_forward(self):
+        choice = randint(0, 1)
+        if choice == 1:
+            self.logger.info("Random back and forward")
+            self.driver.back()
+            self.driver.forward()
+        else:
+            time.sleep(randint(randint(5, 10), randint(11, 19)))
+
 
 class ChatBING(PageOperations):
     url = 'https://www.bing.com/chat?q=Bing+AI&FORM=hpcodx'
     logger = Logger()
-
-    def __init__(self):
-        ssl._create_default_https_context = ssl._create_stdlib_context
-        self.driver = uc.Chrome()
 
     def open_chat_page(self):
         self.driver.get(self.url)
@@ -120,14 +151,14 @@ class ChatGPT(PageOperations):
     url = 'https://chat.openai.com/chat'
     email = 'bartekkawa2021@gmail.com'
     password = 'MADAfaka2001!'
-    logger = Logger()
 
     def __init__(self):
-        ssl._create_default_https_context = ssl._create_stdlib_context
-        # options = webdriver.ChromeOptions()
-        # options.add_argument("--headless")
-        # self.driver = uc.Chrome(options=options)
-        self.driver = uc.Chrome()
+        super().__init__()
+        # ssl._create_default_https_context = ssl._create_stdlib_context
+        # # options = webdriver.ChromeOptions()
+        # # options.add_argument("--headless")
+        # # self.driver = uc.Chrome(options=options)
+        # self.driver = uc.Chrome()
 
     def open_chat_page(self):
         self.driver.get(self.url)
@@ -135,33 +166,33 @@ class ChatGPT(PageOperations):
         self.logger.info("Page opened")
 
     def login_chat(self, tries: int = 3):
+        self.random_back_and_forward()
         self.click(Locators.login_button)
+        self.random_back_and_forward()
 
         # proceed with logging in
+
         try:
             self.send_text(locator=Locators.email_input, text_input=self.email)
         except:
             self.send_text(locator=Locators.username_input, text_input=self.email)
+
         try:
             self.click(Locators.continue_logging_button)
         except:
             self.click(Locators.continue_logging)
+        self.random_refresh()
 
         self.send_text(locator=Locators.password_input, text_input=self.password)
 
         # try to finish logging to chat
         time.sleep(30)
         try:
-            try:
-                self.click(Locators.submit_login)
-            except:
-                self.click(Locators.submit_continue)
+            self.click(Locators.submit_login)
         except:
-            self.driver.refresh()
-            try:
-                self.click(Locators.submit_login)
-            except:
-                self.click(Locators.submit_continue)
+            self.click(Locators.submit_continue)
+        time.sleep(randint(randint(6, 12), randint(14, 30)))
+        self.random_refresh()
 
         self.logger.info("Logged in")
         # create new chat and capture name
