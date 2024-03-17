@@ -127,10 +127,16 @@ class PageOperations:
         choice = randint(0, 1)
         if choice == 1:
             self.logger.info("Random back and forward")
+            time.sleep(randint(randint(1, 4), randint(5, 10)))
             self.driver.back()
+            time.sleep(randint(randint(10, 13), randint(14, 19)))
             self.driver.forward()
+            time.sleep(randint(randint(2, 6), randint(9, 17)))
         else:
             time.sleep(randint(randint(5, 10), randint(11, 19)))
+
+    def random_scroll(self):
+        pass
 
 
 class ChatBING(PageOperations):
@@ -171,7 +177,6 @@ class ChatGPT(PageOperations):
         self.random_back_and_forward()
 
         # proceed with logging in
-
         try:
             self.send_text(locator=Locators.email_input, text_input=self.email)
         except:
