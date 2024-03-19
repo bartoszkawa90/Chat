@@ -1,19 +1,14 @@
-import dataclasses
-from webdriver_manager.chrome import ChromeDriverManager
+from dataclasses import dataclass
 import undetected_chromedriver as uc
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-import sys
 from copy import deepcopy
 import time
-import requests
 from Logger import Logger
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import ssl
 from functools import wraps
-from selenium.webdriver.support.wait import TimeoutException
 from random import randint
 
 
@@ -24,7 +19,7 @@ class Locator:
         self.value = value
 
 
-@dataclasses.dataclass
+@dataclass
 class Locators:
     # bing
     close_pop_up_button = Locator(By.ID, 'close pop up', 'bnp_btn_reject')
@@ -46,9 +41,7 @@ class Locators:
 
     create_next_chat = Locator(By.XPATH, 'create new chat', '//*[@id="__next"]/div[1]/div[1]/div/div/div/div/nav/div[2]/div[1]/div/a/div[2]')
     answer = Locator(By.XPATH, 'answer', '// *[ @ id = "__next"] / div[1] / div[2] / main / div[2] / div[1] / div / div / div / div[{}]')
-    # collect answer
-    # // *[ @ id = "__next"] / div[1] / div[2] / main / div[2] / div[1] / div / div / div / div[3]       // first answer
-    # // *[ @ id = "__next"] / div[1] / div[2] / main / div[2] / div[1] / div / div / div / div[5]       // second answer
+
 
 # Decorators
 def retry_on_exception(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
@@ -81,13 +74,14 @@ def wait_random_delay():
 
 
 class PageOperations:
-    def __init__(self):
+    def __init__(self, run_headless=False):
         self.logger = Logger()
         ssl._create_default_https_context = ssl._create_stdlib_context
         self.driver = uc.Chrome()
 
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
+        """ Wait until locator visible and click it """
         self.wait_until_visible(locator, 30)
         element = self.driver.find_element(locator.type, locator.value)
         element.click()
@@ -95,28 +89,33 @@ class PageOperations:
 
     @wait_random_delay()
     def click_enter(self, locator: Locator):
+        """ Wait until locator visible and click enter button """
         self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         element.send_keys(Keys.ENTER)
 
     @wait_random_delay()
     def send_text(self, locator: Locator, text_input: str) -> None:
+        """ Wait until locator visible and sent text there """
         self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         element.send_keys(text_input)
         self.logger.info(f"text passed to {locator.title}")
 
     def get_text(self, locator: Locator) -> str:
+        """ Wait until locator visible and get its text """
         self.wait_until_visible(locator, 20)
         element = self.driver.find_element(locator.type, locator.value)
         return element.text
 
     def wait_until_visible(self, locator: Locator, timeout: int):
+        """ Wait until locator is visible """
         WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((locator.type, locator.value)))
         time.sleep(2)
 
 # Randomize to avoid CAPTCHA
     def random_refresh(self):
+        """ Randomly refresh page // used only when it does not disturb login pipeline """
         choice = randint(0, 1)
         if choice == 1:
             self.logger.info("Random refresh")
@@ -125,6 +124,7 @@ class PageOperations:
             time.sleep(randint(randint(1, 4), randint(5, 8)))
 
     def random_back_and_forward(self):
+        """ Move on page back and forward and wait some time or just wait random timeout """
         choice = randint(0, 1)
         if choice == 1:
             self.logger.info("Random back and forward")
@@ -137,48 +137,35 @@ class PageOperations:
             time.sleep(randint(randint(5, 10), randint(11, 19)))
 
     def random_scroll(self):
+        """ Scroll down and up random amount of pixels or wait random timeout """
         choice = randint(0, 1)
         if choice == 1:
             scroll = randint(randint(10, 100), randint(101, 600))
             self.driver.execute_script(f"window.scrollBy({scroll}, {scroll});")
-            self.driver.execute_script(f"window.scrollBy({scroll}, {scroll});")
+            self.driver.execute_script(f"window.scrollBy({scroll}, -{scroll});")
         else:
             time.sleep(randint(randint(2, 7), randint(8, 12)))
-
-
-class ChatBING(PageOperations):
-    url = 'https://www.bing.com/chat?q=Bing+AI&FORM=hpcodx'
-    logger = Logger()
-
-    def open_chat_page(self):
-        self.driver.get(self.url)
-        self.click(Locators.close_pop_up_button)
-        self.logger.info("Page opened")
-
-    def ask_chat(self, locator: Locator = Locators.text_input, text: str = ''):
-        self.send_text(locator, text)
-        self.click_enter(locator)
 
 
 class ChatGPT(PageOperations):
     url = 'https://chat.openai.com/chat'
     email = 'bartekkawa2021@gmail.com'
     password = 'MADAfaka2001!'
+    status = ''
 
-    def __init__(self):
-        super().__init__()
-        # ssl._create_default_https_context = ssl._create_stdlib_context
-        # # options = webdriver.ChromeOptions()
-        # # options.add_argument("--headless")
-        # # self.driver = uc.Chrome(options=options)
-        # self.driver = uc.Chrome()
+    def __init__(self, run_headless=False):
+        super().__init__(run_headless=run_headless)
 
     def open_chat_page(self):
+        """ Open ChatGPT page """
         self.driver.get(self.url)
+        self.status = "Open-not-logged"
+        self.logger.info(f"Page opened, {self.status}")
 
-        self.logger.info("Page opened")
-
-    def login_chat(self, tries: int = 3):
+    def login_chat(self):
+        """
+        Full login with additional random actions to avoid CAPTCHA puzzels
+        """
         self.random_scroll()
         self.random_back_and_forward()
         self.click(Locators.login_button)
@@ -215,14 +202,16 @@ class ChatGPT(PageOperations):
         # create new chat and capture name
         time.sleep(5)
         self.click(Locators.create_next_chat)
-        self.logger.info("Chat is ready")
+        self.status = "Opened-ready-for-questions"
+        self.logger.info(f"Chat is ready, {self.status}")
 
     def ask_chat(self, locator: Locator = Locators.text_input, input: str = '') -> str:
-        # put text and press enter
+        """ Send text and click enter """
         self.send_text(locator=locator, text_input=input)
         self.click_enter(locator)
 
     def get_answers(self, num_od_questions: int = 1):
+        """ Collect all answers from current chat """
         answers = []
         for i in range(3, 2*(num_od_questions+1), 2):
             locator = deepcopy(Locators.answer)
@@ -232,7 +221,6 @@ class ChatGPT(PageOperations):
 
         return answers
 
-
-
-
-
+    def delete_chat(self):
+        """  """
+        pass

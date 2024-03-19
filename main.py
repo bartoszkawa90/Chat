@@ -3,28 +3,20 @@ import time
 from Chat import *
 
 
+def ask_chat_and_collect_answers():
+    """ Open Chat write questions and collect answers """
+    pass
+
+
 if __name__ == '__main__':
-    chat = ChatGPT()
-
-    chat.open_chat_page()
-
-    chat.login_chat()
 
     # TESTING ----------------------------------------------------------------------------------------------------------
     test_input1 = 'what is the weather today'
     test_input2 = 'what is the date today'
     # # ------------------------------------------------------------------------------------------------------------------
 
-    # chat.ask_chat(text=test_input1)
+    # Test full functionality
 
-    time.sleep(3)
-    chat.ask_chat(input=test_input1)
-    time.sleep(3)
-    chat.ask_chat(input=test_input2)
-    time.sleep(5)
-
-    answers = chat.get_answers(2)
-    print(answers)
 
 
 
