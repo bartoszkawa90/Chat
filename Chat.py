@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import undetected_chromedriver as uc
+# from undetected_chromedriver.options import ChromeOptions
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from copy import deepcopy
 import time
@@ -10,6 +12,8 @@ from selenium.webdriver.common.keys import Keys
 import ssl
 from functools import wraps
 from random import randint
+from selenium.webdriver.chrome.options import Options
+from seleniumbase import Driver
 
 
 class Locator:
@@ -17,6 +21,12 @@ class Locator:
         self.type = type
         self.title = title
         self.value = value
+
+
+class QA:
+    def __init__(self, question: str, answer: str):
+        self.question = question
+        self.answer = answer
 
 
 @dataclass
@@ -28,6 +38,7 @@ class Locators:
     # chatgpt
     login_button = Locator(By.XPATH, 'login', '//*[@id="__next"]/div[1]/div[2]/div[1]/div/div/button[1]')
 
+    verify_checkbox = Locator(By.XPATH, "verify button", '//*[@id="challenge-stage"]/div/label/input')
     email_input = Locator(By.ID, 'email', 'email-input')
     username_input = Locator(By.ID, 'username', 'username')
 
@@ -74,10 +85,14 @@ def wait_random_delay():
 
 
 class PageOperations:
-    def __init__(self, run_headless=False):
+    def __init__(self):
         self.logger = Logger()
         ssl._create_default_https_context = ssl._create_stdlib_context
-        self.driver = uc.Chrome()
+        # options = webdriver.ChromeOptions()
+        # # options.headless = True
+        # options.add_argument("--headless")
+        # self.driver = uc.Chrome()
+        self.driver = Driver(uc=True) #, headless="headless")
 
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
@@ -112,6 +127,14 @@ class PageOperations:
         """ Wait until locator is visible """
         WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located((locator.type, locator.value)))
         time.sleep(2)
+
+    def is_element_visible(self, locator: Locator):
+        """ Check if element is visible """
+        try:
+            _ = self.driver.find_element(locator.type, locator.value)
+            return True
+        except:
+            return False
 
 # Randomize to avoid CAPTCHA
     def random_refresh(self):
@@ -153,8 +176,8 @@ class ChatGPT(PageOperations):
     password = 'MADAfaka2001!'
     status = ''
 
-    def __init__(self, run_headless=False):
-        super().__init__(run_headless=run_headless)
+    def __init__(self):
+        super().__init__()
 
     def open_chat_page(self):
         """ Open ChatGPT page """
@@ -210,16 +233,37 @@ class ChatGPT(PageOperations):
         self.send_text(locator=locator, text_input=input)
         self.click_enter(locator)
 
-    def get_answers(self, num_od_questions: int = 1):
+    def get_answers(self, num_of_questions: int = 1):
         """ Collect all answers from current chat """
         answers = []
-        for i in range(3, 2*(num_od_questions+1), 2):
+        for i in range(3, 2*(num_of_questions + 1), 2):
             locator = deepcopy(Locators.answer)
             locator.value = Locators.answer.value.format(i)
             text = self.get_text(locator)
-            answers.append(text)
+            answers.append(text.split("GPT\n")[1])
 
         return answers
+
+    def get_whole_conversation(self, num_of_questions: int):
+        """ Collect all questions and answers from current chat """
+        texts = []
+        _range = 3*num_of_questions if num_of_questions % 2 == 0 else (3*num_of_questions)-1
+        for i in range(2, _range, 1):
+            locator = deepcopy(Locators.answer)
+            locator.value = Locators.answer.value.format(i)
+            text = self.get_text(locator)
+            if i % 2 == 0:
+                texts.append(text.split("You\n")[1])
+            else:
+                texts.append(text.split("GPT\n")[1])
+
+        results = []
+        questions = [texts[i] for i in range(len(texts)) if i % 2 == 0]
+        answers = [texts[i] for i in range(len(texts)) if i % 2 != 0]
+        for q, a in zip(questions, answers):
+            results.append(QA(q, a))
+
+        return results
 
     def delete_chat(self):
         """  """
