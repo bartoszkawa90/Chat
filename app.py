@@ -4,7 +4,7 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from Chat import ChatGPT
+from Chat import *
 
 
 
@@ -73,6 +73,25 @@ class MainApp(App):
         # main_layout.add_widget(equals_button)
 
         return main_layout
+
+    def ask_chat_and_collect_answers(questions: list) -> list[QA]:
+        """ Open Chat write questions and collect answers """
+        chat = ChatGPT()
+        chat.open_chat_page()
+        try:
+            chat.login_chat()
+        except:
+            chat.click(Locators.verify_checkbox)
+            time.sleep(randint(3, 6))
+            chat.login_chat()
+
+        for question in questions:
+            chat.ask_chat(input=question)
+
+        QAs = chat.get_whole_conversation(num_of_questions=2)
+
+        return QAs
+
 
 
 chatapp = MainApp()

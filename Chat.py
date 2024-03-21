@@ -92,7 +92,7 @@ class PageOperations:
         # # options.headless = True
         # options.add_argument("--headless")
         # self.driver = uc.Chrome()
-        self.driver = Driver(uc=True) #, headless="headless")
+        self.driver = Driver(uc=True, headless="headless")
 
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
@@ -232,6 +232,7 @@ class ChatGPT(PageOperations):
         """ Send text and click enter """
         self.send_text(locator=locator, text_input=input)
         self.click_enter(locator)
+        time.sleep(60)
 
     def get_answers(self, num_of_questions: int = 1):
         """ Collect all answers from current chat """
