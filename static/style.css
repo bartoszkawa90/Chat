@@ -4,3 +4,9 @@ h1 {
     text-align: center;
     padding: 10px;
 }
+
+input {
+    box-sizing: border-box;
+    padding-left: 10px;
+    width: 200px;
+}

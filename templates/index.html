@@ -1,5 +1,33 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Welcome to FlaskBlog {% endblock %}</h1>
+    <h1>{% block title %} Welcome to better Chat {% endblock %}</h1>
+
+
+
+
+
+
+    <div class="form-center">
+        <form action="/action_page.php">
+            <textarea rows="4" cols="120"> Enter your questions:  </textarea>
+            <br>
+            <div class="formbox" style="text-align: center">
+                <button><input type="submit" value="ASK"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button><input type="submit" value="Clear"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button><input type="submit" value="Email"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button><input type="submit" value="Download"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </form>
+    </div>
+
+    <style>
+        .form-center {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+
+
+
 {% endblock %}
