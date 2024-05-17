@@ -1,30 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Welcome to better Chat {% endblock %}</h1>
-
-
-
-
+    <h1>{% block title %} Welcome to example Web App {% endblock %}</h1>
 
 
     <div class="form-center">
-        <form action="/action_page.php">
-            <textarea rows="4" cols="120"> Enter your questions:  </textarea>
-            <br>
-            <div class="formbox" style="text-align: center">
-                <button><input type="submit" value="ASK"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button><input type="submit" value="Clear"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button><input type="submit" value="Email"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button><input type="submit" value="Download"></button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
+        <label for="comments">Questions: </label>
+        <form action="/" method="post">
+            <textarea id="comments" name="comments" rows="10" cols="100" placeholder="Enter your comments here">
+                {{SAMPLE_DATA}}
+            </textarea>
+            <br><br><br>
+            <input type="submit" value="Ask" name="ask">
+            <input type="submit" value="Clear" name="clear">
+            <input type="submit" value="Email" name="email">
+            <input type="submit" value="Download" name="download">
         </form>
     </div>
+
 
     <style>
         .form-center {
             display: flex;
             justify-content: center;
+        .form-center {
+            text-align: center;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Adjust the space between buttons */
+        }
+        .button-group form {
+            display: inline; /* Prevent forms from stacking vertically */
+        }
+        input[type="text"] {
+            font-size: 16px; /* Larger text inside the input */
+            width: 800px; /* Wider input field */
+            height: 300px; /* Taller input field */
+            padding: 5px; /* Optional: Add some padding inside the input field */
+            margin-top: 20px;
+        }
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 
