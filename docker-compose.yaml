@@ -1,0 +1,7 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+     - "5001:5000"
+# przedstawiamy to co apoka wystawia na port 5000 na porcie 5001
