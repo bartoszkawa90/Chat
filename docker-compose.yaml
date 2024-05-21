@@ -2,6 +2,12 @@ version: '3'
 services:
   web:
     build: .
+    image: "flask-image"
     ports:
      - "5001:5000"
+    container_name: "flask-app"
 # przedstawiamy to co apoka wystawia na port 5000 na porcie 5001
+#sudo docker-compose build
+#docker-compose up
+# konkretny kontener, tez chodzi na 5001
+#docker run -it -p 5001:5000 flask-image
