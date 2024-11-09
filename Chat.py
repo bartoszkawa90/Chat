@@ -92,7 +92,7 @@ class PageOperations:
         # # options.headless = True
         # options.add_argument("--headless")
         # self.driver = uc.Chrome()
-        self.driver = Driver(uc=True, headless="headless")
+        self.driver = Driver(uc=True)#, headless="headless")
 
     #     @retry_on_exception(max_retries=2, delay=1, exceptions=(TimeoutException,))
     def click(self, locator: Locator):
@@ -119,7 +119,7 @@ class PageOperations:
 
     def get_text(self, locator: Locator) -> str:
         """ Wait until locator visible and get its text """
-        self.wait_until_visible(locator, 20)
+        self.wait_until_visible(locator, 35)
         element = self.driver.find_element(locator.type, locator.value)
         return element.text
 
@@ -172,8 +172,8 @@ class PageOperations:
 
 class ChatGPT(PageOperations):
     url = 'https://chat.openai.com/chat'
-    email = 'bartekkawa2021@gmail.com'
-    password = 'MADAfaka2001!'
+    email = '
+    password =
     status = ''
 
     def __init__(self):

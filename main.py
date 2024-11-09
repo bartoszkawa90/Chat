@@ -17,11 +17,9 @@ def ask_chat_and_collect_answers(questions: list) -> list[QA]:
     for question in questions:
         chat.ask_chat(input=question)
 
-    QAs = chat.get_whole_conversation(num_of_questions=2)
+    questions_and_answers = chat.get_whole_conversation(num_of_questions=2)
 
-    return QAs
-
-
+    return questions_and_answers
 
 
 if __name__ == '__main__':
